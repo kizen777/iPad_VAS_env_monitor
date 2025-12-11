@@ -214,5 +214,26 @@ p_reg <- ggplot(df_reg, aes(x = pressure_hPa, y = vas_score)) +
       size   = 10
     )
   )
-
 print(p_reg)
+
+# 作業ディレクトリが ipad_VAS_env_monitor の場合
+dir.create("Output/Figures", recursive = TRUE, showWarnings = FALSE)
+
+# 時系列プロット p を保存
+ggsave(
+  filename = "Output/Figures/timeseries_pressure_vas_2025-01-01.png",
+  plot     = p,
+  width    = 8,
+  height   = 4.5,
+  dpi      = 300
+)
+
+# 散布図＋回帰直線 p_reg を保存
+ggsave(
+  filename = "Output/Figures/scatter_pressure_vs_vas_2025-01-01.png",
+  plot     = p_reg,
+  width    = 6,
+  height   = 5,
+  dpi      = 300
+)
+
