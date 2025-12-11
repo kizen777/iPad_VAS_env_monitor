@@ -9,8 +9,8 @@
 ```text
 ├── Output                  # 解析結果の出力一式
 │   └── Figures             # 図ファイル（.png など）
-│       ├── scatter_pressure_vs_vas_2025-01-01.png
-│       └── timeseries_pressure_vas_2025-01-01.png
+│       ├── scatter_pressure_vs_vas_2025-01-01.png # 気圧とVASの散布図（相関の可視化)
+│       └── timeseries_pressure_vas_2025-01-01.png # 気圧とVASの時系列の推移
 │   └── Reports             # 将来のレポート用出力（.html, .pdf など）
 ├── README.md               # プロジェクト概要と使い方
 ├── R_Script                # 解析用 R スクリプト
