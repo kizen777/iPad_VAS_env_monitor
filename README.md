@@ -6,6 +6,7 @@
 
 ## プロジェクト構成
 
+```text
 ├── Output                  # 解析結果の出力一式
 │   ├── Figures             # 図ファイル（.png など）
 │   └── Reports             # 将来のレポート用出力（.html, .pdf など）
