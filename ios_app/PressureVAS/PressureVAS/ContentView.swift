@@ -16,57 +16,73 @@ struct TriangularVASBar: Shape {
 struct ContentView: View {
     // スライダー位置（0.0〜100.0）
     @State private var vasValue: Double = 50.0
-    // VAS の物理幅（100mm 相当をあとで実測して調整）
-    private let vasWidth: CGFloat = 520
     // 記録ボタンの物理幅（16cm 相当をあとで実測して調整）
     private let recordButtonWidth: CGFloat = 600
-
+    
+    // 端末ごとに長さを変える VAS 幅
+    private var vasWidth: CGFloat {
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            return 600   // iPadで実測して100mm±2mmだった値
+        } else {
+            return 560   // iPhone 15 Pro Maxで実測して100mm±2mmだった値
+        }
+    }
+    
+    private let twoCmInPoints: CGFloat = 60
+    
+    var isPhone: Bool {
+        UIDevice.current.userInterfaceIdiom == .phone
+    }
+    
+    
     // VAS 値を一時的に表示しているか
     @State private var isShowingValue: Bool = false
     // 記録中かどうか（ボタンの色・文言切り替え用）
     @State private var isRecording: Bool = false
-
+    
     var body: some View {
         VStack {
             // 上のタイトル
-            Text("今の痛みの強さを、\nスライダーを左右に動かして示してください。")
+            Text("今の痛みの強さをスライダーを示してください")
                 .font(.title)
                 .multilineTextAlignment(.center)
-                .padding(.top, 40)
-
+                .padding(.top, 100)
+            
             Spacer()
-                .frame(height: 40)
-
+                .frame(height: 0)
+            
             // --- VAS ラインとガイド一式 ---
             VStack(spacing: 24) {
-
+                
                 // ① 上段：絵文字（両端のてっぺん付近）
                 GeometryReader { geo in
                     let width = geo.size.width
-
+                    
                     ZStack {
                         // 左端のてっぺんの真上
                         Text("😀")
                             .font(.system(size: 60))
-                            .position(x: 0, y: geo.size.height / 2)
-
+                            .position(x: 0,
+                                      y: geo.size.height - 15)  // ← 同じくここ
+                        
                         // 右端のてっぺんの真上
                         Text("😫")
                             .font(.system(size: 60))
-                            .position(x: width, y: geo.size.height / 2)
+                            .position(x: width,
+                                      y: geo.size.height - 15)  // ← 同じくここ
                     }
                 }
                 .frame(width: vasWidth, height: 80)
-
+                
                 // ② 三角定規＋ガイド
                 ZStack {
                     TriangularVASBar()
                         .fill(Color.blue.opacity(0.3))
-
+                    
                     GeometryReader { geo in
                         let width = geo.size.width
                         let xPos = CGFloat(vasValue / 100.0) * width
-
+                        
                         Rectangle()
                             .fill(Color.blue)
                             .frame(width: 4, height: geo.size.height+50)
@@ -83,72 +99,71 @@ struct ContentView: View {
                             vasValue = Double(clampedX / width) * 100.0
                         }
                 )
-
+                
                 // ③ 下段：文字ラベル（両端のてっぺんの真下付近）
                 GeometryReader { geo in
                     let width = geo.size.width
-
+                    
                     ZStack {
                         Text("全く痛くない")
-                            .font(.title2.bold())
-                            .position(x: 0, y: geo.size.height / 1)
-
+                            .font(.system(size: isPhone ? 20 : 28, weight: .bold))
+                            .position(x: 0,
+                                      y: geo.size.height - 30)  // ← ここを調整（-20 ≒ 約5mmぶん）
+                        
                         Text("耐えられないほど痛い")
-                            .font(.title2.bold())
-                            .position(x: width, y: geo.size.height / 1)
+                            .font(.system(size: isPhone ? 20 : 28, weight: .bold))
+                            .position(x: width,
+                                      y: geo.size.height - 30)  // ← 同じくここ
                     }
                 }
                 .frame(width: vasWidth, height: 40)
             }
             .padding()
-
+            .padding(.top, -30) // ここを追加(約5mm分底上げかな）
+            
             Spacer()
-
+            
             // 記録ボタンのすぐ上に、10秒だけ VAS値を表示
             if isShowingValue {
                 Text("\(Int(vasValue))")
                     .font(.system(size: 80, weight: .bold))
-                    .padding(.bottom, 10)
+                    .padding(.bottom, twoCmInPoints)
             }
-
+            
             // 記録ボタン
-            Button {
-                // 二重押し防止：すでに記録中なら何もしない
-                guard !isRecording else { return }
+            GeometryReader { geo in
+                // 片側 25〜30mm にしたいので、まず 150pt 前後からスタート
+                let marginPerSide: CGFloat = 260  // 実機で25〜30mmになるよう微調整
 
-                // 1. 状態を「記録中」にして値を表示
-                isRecording = true
-                isShowingValue = true
+                Button {
+                    guard !isRecording else { return }
 
-                // 2. 10秒後に記録＆ホームポジションへ戻す
-                DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-                    // ここで vasValue を保存（CSV/JSON など）する処理を書く
-                    // 例: saveVAS(value: vasValue)
+                    isRecording = true
+                    isShowingValue = true
 
-                    // 表示と記録中フラグをオフ
-                    isShowingValue = false
-                    isRecording = false
-
-                    // スライダーをホームポジション 50 へ
-                    vasValue = 50.0
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+                        // saveVAS(value: vasValue)
+                        isShowingValue = false
+                        isRecording = false
+                        vasValue = 50.0
+                    }
+                } label: {
+                    Text(isRecording ? "記録しています…" : "記録")
+                        .font(.system(size: 32, weight: .bold))
+                        .padding(.vertical, 10) // 記録ボタンの厚み
+                        .frame(
+                            width: geo.size.width - marginPerSide * 2
+                        )
+                        .background(isRecording ? Color.white : Color.blue)
+                        .foregroundColor(isRecording ? Color.blue : Color.white)
+                        .cornerRadius(12)
                 }
-            } label: {
-                Text(isRecording ? "記録しています…" : "記録")
-                    .font(.system(size: 32, weight: .bold))
-                    .padding(.vertical, 16)
-                    .frame(width: recordButtonWidth)
-                    .background(isRecording ? Color.white : Color.blue)      // 色反転
-                    .foregroundColor(isRecording ? Color.blue : Color.white) // 色反転
-                    .cornerRadius(12)
-                    .padding(.bottom, 40)
+                // ここで GeometryReader 内の横方向をセンターに配置
+                .padding(.top, -20)  // 全体を約5mmぶん上に
+                .frame(maxWidth: .infinity, alignment: .center)
+              //  .padding(.bottom, twoCmInPoints + 10) // 最底部よりの余白
             }
+            .frame(height: 100)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 }
-
-#Preview {
-    ContentView()
-}
-
-***
