@@ -24,7 +24,7 @@ struct ContentView: View {
         if UIDevice.current.userInterfaceIdiom == .pad {
             return 600   // iPadで実測して100mm±2mmだった値
         } else {
-            return 560   // iPhone 15 Pro Maxで実測して100mm±2mmだった値
+            return 530   // iPhone 15 Pro Maxで実測して100mm±2mmだった値
         }
     }
     
