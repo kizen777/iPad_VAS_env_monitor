@@ -45,7 +45,7 @@ Home
 
 ## iOS アプリ（BaroGage / VAS Scale）の役割
 
-<img src="ios_app/App_icon/PressureVAS.jpg" alt="VAS Scale icon" width="80">
+<img src="ios_app/App_icon/PressureVAS.JPG" alt="VAS Scale icon" width="80">
 
 - PressureVAS（`ios_app/PressureVAS`）
   - VAS スライダー UI と気圧データの統合を将来実装予定
