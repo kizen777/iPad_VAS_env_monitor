@@ -41,7 +41,6 @@ Home
 └── PressureVAS # VAS と気圧を組み合わせたアプリ案
 ├── PressureVASApp.swift
 └── ContentView.swift
-
 ```
 
 ## iOS アプリ（Baro Gage / PressureVAS）の役割
