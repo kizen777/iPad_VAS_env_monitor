@@ -1,15 +1,14 @@
 # iPad VAS Env Monitor / Baro Gage
 
-- 目的: iPad / iPhone の内蔵気圧計と外部センサーを用いて、5分毎の気圧・室温・湿度を記録し、VAS イベントも併記する。
-- ローカル環境: MacBook Pro M4 16インチ, RStudio, Xcode.
-- 構成:
-  - R: データ管理・前処理・解析・図の作成
-  - iOSアプリ: 気圧（＋高度）連続計測、5分毎のログ保存、VAS スライダー UI（将来予定）
-
+-   目的: iPad / iPhone の内蔵気圧計と外部センサーを用いて、5分毎の気圧・室温・湿度を記録し、VAS イベントも併記する。
+-   ローカル環境: MacBook Pro M4 16インチ, RStudio, Xcode.
+-   構成:
+    -   R: データ管理・前処理・解析・図の作成
+    -   iOSアプリ: 気圧（＋高度）連続計測、5分毎のログ保存、VAS スライダー UI（将来予定）
 
 ## プロジェクト構成
 
-```text
+``` text
 Home
 ├── README.md # このファイル
 ├── ipad_VAS_env_monitor.Rproj # R プロジェクト
@@ -47,25 +46,25 @@ Home
 
 ### PressureVAS（`ios_app/PressureVAS`）
 
-<img src="ios_app/App_icon/PressureVAS.JPG" alt="VAS Scale icon" width="80">  
-- VAS スライダー UI と気圧データの統合を将来実装予定。
+-   <img src="ios_app/App_icon/PressureVAS.JPG" alt="VAS Scale icon" width="80"/>\
+    VAS スライダー UI と気圧データの統合を将来実装予定。
 
 ### Baro Gage（`ios_app/PressureManager`）
 
-<img src="ios_app/App_icon/air_pressure_gage.png" alt="Baro Gage icon" width="80">  
-- iPhone 15 などの気圧センサーから現在の気圧・高度を取得し
-- 10秒ごとのグラフ表示と5分毎のログ保存を行う。  
-- 急激な気圧変化の検出と画面フラッシュ・強調表示（実装中）。
+-   <img src="ios_app/App_icon/air_pressure_gage.png" alt="Baro Gage icon" width="80"/>\
+    Phone 15 などの気圧センサーから現在の気圧・高度を取得し
 
----
-  
+-   10秒ごとのグラフ表示と5分毎のログ保存を行う。\
+    急激な気圧変化の検出と画面フラッシュ・強調表示（実装中）
+
+------------------------------------------------------------------------
+
 ## 今後の予定
 
-- R 側
-  - 5分値ログ（気圧・温度・湿度・VAS）のデータ形式を確定する
-  - 時系列プロット・相関解析のスクリプト整備
-- iOS 側
-  - Baro Gage のバックグラウンド 5分毎ログの安定化
-  - 気圧急変アラート（フラッシュ＋赤丸）の実装
-  - VAS スライダーを組み合わせた iPad 用 UI の実装
-  
+-   R 側
+    -   5分値ログ（気圧・温度・湿度・VAS）のデータ形式を確定する
+    -   時系列プロット・相関解析のスクリプト整備
+-   iOS 側
+    -   Baro Gage のバックグラウンド 5分毎ログの安定化
+    -   気圧急変アラート（フラッシュ＋赤丸）の実装
+    -   VAS スライダーを組み合わせた iPad 用 UI の実装
