@@ -46,16 +46,24 @@ Home
 
 ### PressureVAS（`ios_app/PressureVAS`）
 
--   <img src="ios_app/App_icon/PressureVAS.JPG" alt="VAS Scale icon" width="80"/>\
+<div style="display:flex; align-items:flex-start; gap:12px;">
+  <img src="ios_app/App_icon/PressureVAS.JPG" alt="VAS Scale icon" width="80">
+  <div>
     VAS スライダー UI と気圧データの統合を将来実装予定。
+  </div>
+</div>
+
 
 ### Baro Gage（`ios_app/PressureManager`）
 
--   <img src="ios_app/App_icon/air_pressure_gage.png" alt="Baro Gage icon" width="80"/>\
-    Phone 15 などの気圧センサーから現在の気圧・高度を取得し
-
--   10秒ごとのグラフ表示と5分毎のログ保存を行う。\
+<div style="display:flex; align-items:flex-start; gap:12px;">
+  <img src="ios_app/App_icon/air_pressure_gage.png" alt="Baro Gage icon" width="80">
+  <div>
+    Phone 15 などの気圧センサーから現在の気圧・高度を取得し<br>
+    10秒ごとのグラフ表示と5分毎のログ保存を行う。<br>
     急激な気圧変化の検出と画面フラッシュ・強調表示（実装中）
+  </div>
+</div>
 
 ------------------------------------------------------------------------
 
