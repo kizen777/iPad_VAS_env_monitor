@@ -56,7 +56,9 @@ Home
 <p>
   <img src="ios_app/App_icon/air_pressure_gage.png" alt="Baro Gage icon" width="80"
        style="vertical-align: middle; margin-right: 8px;">
-  <span>iPhone 15 などの気圧センサーから現在の気圧・高度を取得し、10秒ごとのグラフ表示と5分毎のログ保存を行う。急激な気圧変化の検出と画面フラッシュ・強調表示（実装中）。</span>
+  <span>iPhone 15 などの気圧センサーから現在の気圧・高度を取得し、<br>
+  10秒ごとのグラフ表示と5分毎のログ保存を行う。\n
+  急激な気圧変化の検出と画面フラッシュ・強調表示（実装中）。</span>
 </p>
 
 ------------------------------------------------------------------------
