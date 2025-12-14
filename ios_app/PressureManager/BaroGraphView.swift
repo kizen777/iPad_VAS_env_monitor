@@ -21,7 +21,12 @@ final class BaroViewModel: ObservableObject {
 
     private let altimeter = CMAltimeter()
     private let queue = OperationQueue()
-
+    
+    // 現在気圧表用
+    var currentPressure: Double? {
+        samples.last?.pressureHpa
+    }
+    
     // 画面に表示する時間幅（秒）
     private let visibleDuration: TimeInterval = 60 * 60  // 60分
 
@@ -119,17 +124,35 @@ final class BaroViewModel: ObservableObject {
 
 struct BaroGraphView: View {
     @StateObject private var viewModel = BaroViewModel()
-
+    
     private let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy/MM/dd EEE"   // 例: 2025/12/14 Sun
         return f
     }()
-
+    
     var body: some View {
-        VStack {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            // 日付
+            Text(dateFormatter.string(from: Date()))
+                .font(.caption.bold())
+
+            // 現在の気圧（あれば表示）
+            if let p = viewModel.currentPressure {
+                Text("     現在気圧:")
+                    .font(.caption.bold())
+                Text(String(format: "%.1f hPa", p))
+                    .font(.title3.bold())   // 大きめの数字
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, 8)
+
+
+            // グラフ本体
             Chart {
-                // 生データの折れ線
+                // ここは元のコードそのまま
                 ForEach(viewModel.visibleSamples) { sample in
                     LineMark(
                         x: .value("Time", sample.time),
@@ -138,7 +161,6 @@ struct BaroGraphView: View {
                     .foregroundStyle(sample.isRapid ? .red : .blue)
                 }
 
-                // 5分毎時のポイント＋数値ラベル
                 ForEach(viewModel.visibleFiveMinPoints, id: \.time) { point in
                     PointMark(
                         x: .value("Time", point.time),
@@ -159,23 +181,24 @@ struct BaroGraphView: View {
                     AxisValueLabel(format: .dateTime.hour().minute())
                 }
             }
-            .chartYScale(domain: 800...1200)
+            .chartYScale(domain: 950...1100)
             .chartYAxisLabel {
                 Text("Pressure (hPa)")
                     .font(.caption.bold())
+                    .frame(height: 0) // グラフ表示幅調整
             }
             .chartYAxis {
                 AxisMarks(values: .automatic)
             }
             .padding()
 
-            // グラフ下に日付
-            HStack {
-                Text(dateFormatter.string(from: Date()))
-                    .font(.caption.bold())
-                Spacer()
-            }
-            .padding(.horizontal, 8)
+            // 日付 グラフ下段　テスト時 コメントアウトしておく
+//            HStack {
+//                Text(dateFormatter.string(from: Date()))
+//                    .font(.caption.bold())
+//                Spacer()
+//            }
+//            .padding(.horizontal, 8)
 
             // Start / Stop ボタン
             HStack(spacing: 40) {
@@ -193,4 +216,4 @@ struct BaroGraphView: View {
             .padding(.top, 16)
         }
     }
-}
+
