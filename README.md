@@ -42,6 +42,8 @@ Home
 ├── PressureVASApp.swift
 └── ContentView.swift
 
+```
+
 ## iOS アプリ（Baro Gage / PressureVAS）の役割
 
 - Barotest / Baro Gage（`ios_app/PressureManager`）
