@@ -43,7 +43,7 @@ Home
 └── ContentView.swift
 ```
 
-## iOS アプリ（Baro Gage / PressureVAS）の役割
+## iOS アプリ（BaroGage / VAS Scale）の役割
 
 - Barotest / Baro Gage（`ios_app/PressureManager`）
   - iPhone 15 などの気圧センサーから現在の気圧・高度を取得
