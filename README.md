@@ -45,9 +45,13 @@ Home
 
 ## iOS アプリ（BaroGage / VAS Scale）の役割
 
+![PressureVAS](https://github.com/user-attachments/assets/4d4e0710-aedb-4625-a49b-27ea471240f1)
 
 - PressureVAS（`ios_app/PressureVAS`）
   - VAS スライダー UI と気圧データの統合を将来実装予定
+ 
+<img width="1040" height="1040" alt="air_pressure_gage" src="https://github.com/user-attachments/assets/733a0299-2599-43b2-8c4d-2bd0fe557c5f" />
+
 
 - Baro Gage（`ios_app/PressureManager`）
   - iPhone 15 などの気圧センサーから現在の気圧・高度を取得
