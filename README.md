@@ -52,7 +52,7 @@ Home
     VAS スライダー UI と気圧データの統合を将来実装予定。
   </div>
 </div>
-
+---
 
 ### Baro Gage（`ios_app/PressureManager`）
 
