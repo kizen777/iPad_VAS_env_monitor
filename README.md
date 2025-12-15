@@ -1,4 +1,4 @@
-# iPad VAS Env Monitor / Baro Gage
+# VAS Slider(Pressure, Temp, Humi)  / Baro Gage
 
 -   目的: iPad / iPhone の内蔵気圧計と外部センサーを用いて、5分毎の気圧・室温・湿度を記録し、VAS イベントも併記する。
 -   ローカル環境: MacBook Pro M4 16インチ, RStudio, Xcode.
