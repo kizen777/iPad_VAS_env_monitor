@@ -142,7 +142,7 @@ struct BaroGraphView: View {
                 Text("     現在気圧:")
                     .font(.caption.bold())
                 Text(String(format: "%.1f hPa", p))
-                    .font(.title3.bold())   // 大きめの数字
+                    .font(.caption.bold())   // 大きめの数字
             }
 
             Spacer()

@@ -17,7 +17,8 @@ struct ContentView: View {
             
             if let p = pressureManager.latestPressure {
                 Text(String(format: "現在の気圧: %.1f hPa", p))
-                    .font(.largeTitle)
+                   // .font(.largeTitle)
+                    .font(.title2)
                     .fontWeight(.bold)
             } else {
                 Text("現在の気圧: 取得中…")
