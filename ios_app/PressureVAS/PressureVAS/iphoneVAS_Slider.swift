@@ -14,200 +14,192 @@ struct TriangularVASBar: Shape {
 }
 
 struct ContentView: View {
-    // 設定を保存する
+    // 表示設定
     @AppStorage("isNonBiasMode") private var isNonBiasMode: Bool = false
     
-    // スライダー位置（0.0〜100.0）
+    // 患者 ID 登録
+    @AppStorage("patientID") private var patientID: String = ""
+    @State private var tempPatientID: String = ""
+    
+    // VAS関連状態
     @State private var vasValue: Double = 50.0
-    // VAS値を一時的に表示しているか
     @State private var isShowingValue: Bool = false
-    // 記録中かどうか
     @State private var isRecording: Bool = false
-    // 検者用シート表示フラグ
     @State private var isShowingExaminerSheet: Bool = false
-
-    // 端末ごとに長さを変える VAS 幅
+    
+    // 端末ごとのVAS幅
     private var vasWidth: CGFloat {
         if UIDevice.current.userInterfaceIdiom == .pad {
             return 600   // iPad
         } else {
-            return 530   // iPhone 15 Pro Max
+            return 530   // iPhone 15 Pro Max 相当
         }
     }
-
-    // 高さの設定値（175のまま維持）
-    private let triangleHeight: CGFloat = 175
     
-    // 署名用の濃い青色を定義
+    private let triangleHeight: CGFloat = 175
     private let darkSignatureBlue = Color(red: 0.0, green: 0.0, blue: 0.4)
-
+    
     var isPhone: Bool {
         UIDevice.current.userInterfaceIdiom == .phone
     }
-
+    
+    // MARK: - 画面本体
     var body: some View {
-        // 全体を包むGeometryReaderで座標系を統一
-        GeometryReader { geo in
-            ZStack {
-                // ==========================================
-                // レイヤー0：隠し署名（最背面）
-                // ==========================================
-                Text("Kizen Sasaki")
-                    // Zから始まる筆記体フォント(Zapfino)、サイズ7pt
-                    .font(.custom("Zapfino", size: 7))
-                    // 記録ボタンより濃い青
-                    .foregroundColor(darkSignatureBlue)
-                    // 画面最下部ギリギリに配置
-                    .position(x: geo.size.width / 2, y: geo.size.height + 7)
-                    .zIndex(0)
-
-                // ==========================================
-                // レイヤー1：上部タイトル（位置固定）
-                // ==========================================
-                VStack {
-                    Text("今の痛みの強さをスライダーを示してください")
-                        .font(.title)
-                        .multilineTextAlignment(.center)
-                        .padding(.top, 31) // 上から31pt固定
-                    Spacer()
+        // 患者ID未登録なら登録画面
+        if patientID.isEmpty {
+            VStack {
+                Text("患者IDを登録してください")
+                    .font(.title)
+                    .padding()
+                TextField("患者ID（例: P001）", text: $tempPatientID)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding()
+                Button("登録する") {
+                    patientID = tempPatientID
                 }
-                .zIndex(1)
-
-                // ==========================================
-                // レイヤー2：VASスライダー（中央）
-                // ==========================================
-                VStack(spacing: 0) {
+                .disabled(tempPatientID.isEmpty)
+            }
+            .padding()
+        } else {
+            // VAS画面
+            GeometryReader { geo in
+                ZStack {
+                    // レイヤー0：隠し署名
+                    Text("Kizen Sasaki")
+                        .font(.custom("Zapfino", size: 7))
+                        .foregroundColor(darkSignatureBlue)
+                        .position(x: geo.size.width / 2, y: geo.size.height + 7)
+                        .zIndex(0)
                     
-                    // ① 上段：絵文字（ノンバイアス時は透明化）
-                    ZStack {
-                        Text("😀")
-                            .font(.system(size: 60))
-                            .position(x: 0, y: 80 - 15)
-                        Text("😫")
-                            .font(.system(size: 60))
-                            .position(x: vasWidth, y: 80 - 15)
-                    }
-                    .frame(width: vasWidth, height: 80)
-                    .opacity(isNonBiasMode ? 0 : 1)
-                    
-                    // ② 三角定規＋ガイド
-                    ZStack {
-                        TriangularVASBar()
-                            .fill(Color.blue.opacity(0.3))
-                        
-                        // 青いバー
-                        let xPos = CGFloat(vasValue / 100.0) * vasWidth
-                        Rectangle()
-                            .fill(Color.blue)
-                            .frame(width: 4, height: triangleHeight + 40)
-                            .position(x: xPos, y: triangleHeight / 2)
-                    }
-                    .frame(width: vasWidth, height: triangleHeight)
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { value in
-                                let width = vasWidth
-                                let clampedX = min(max(0, value.location.x), width)
-                                vasValue = Double(clampedX / width) * 100.0
-                            }
-                    )
-                    
-                    // ③ 下段：文字ラベル（ノンバイアス時は透明化）
-                    ZStack {
-                        Text("全く痛くない")
-                            .font(.system(size: isPhone ? 20 : 28, weight: .bold))
-                            .position(x: 0, y: 30)
-                        Text("耐えられないほど痛い")
-                            .font(.system(size: isPhone ? 20 : 28, weight: .bold))
-                            .position(x: vasWidth, y: 30)
-                    }
-                    .frame(width: vasWidth, height: 60)
-                    .opacity(isNonBiasMode ? 0 : 1)
-                }
-                // 画面中央に配置しつつ、オフセット(3pt)で位置調整
-                .position(x: geo.size.width / 2, y: geo.size.height / 2 + 3)
-                .zIndex(2)
-
-                // ==========================================
-                // レイヤー3：VAS数値の表示（条件付き表示）
-                // ==========================================
-                if isShowingValue {
-                    Text("\(Int(vasValue))")
-                        .font(.system(size: 80, weight: .bold))
-                        .padding(10)
-                        .background(Color.white.opacity(0.6))
-                        .cornerRadius(10)
-                        // 前回位置(下から190pt)を維持
-                        .position(x: geo.size.width / 2, y: geo.size.height - 190)
-                        .zIndex(3)
-                }
-
-                // ==========================================
-                // レイヤー4：記録ボタン（位置固定）
-                // ==========================================
-                Button {
-                    guard !isRecording else { return }
-                    
-                    isRecording = true
-                    isShowingValue = true
-                    
-                    // 10秒待って記録
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-                        saveVAS(value: vasValue)
-                        isShowingValue = false
-                        isRecording = false
-                        vasValue = 50.0
-                    }
-                } label: {
-                    Text(isRecording ? "記録しています…" : "記録")
-                        .font(.system(size: 32, weight: .bold))
-                        .padding(.vertical, 10)
-                        .frame(width: geo.size.width - 260 * 2)
-                        .background(isRecording ? Color.white : Color.blue)
-                        .foregroundColor(isRecording ? Color.blue : Color.white)
-                        .cornerRadius(12)
-                }
-                // ▼▼▼ 修正：下からの位置を 32 → 35 に変更（1mm上へ） ▼▼▼
-                .position(x: geo.size.width / 2, y: geo.size.height - 35)
-                .zIndex(4)
-
-                // ==========================================
-                // レイヤー5：右上の「隠し」検者ボタン（位置固定）
-                // ==========================================
-                VStack {
-                    HStack {
+                    // レイヤー1：タイトル
+                    VStack {
+                        Text("今の痛みの強さをスライダーを示してください")
+                            .font(.title)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 31)
                         Spacer()
-                        Button {
-                            isShowingExaminerSheet = true
-                        } label: {
-                            Image(systemName: "gearshape.fill")
-                                .resizable()
-                                .frame(width: 40, height: 40)
-                                .foregroundColor(Color.gray.opacity(0.4))
-                                .background(Color.white.opacity(0.3))
-                                .clipShape(Circle())
-                        }
-                        // 前回位置(36, -10)を維持
-                        .padding(.top, 36)
-                        .padding(.trailing, -10)
                     }
-                    Spacer()
+                    .zIndex(1)
+                    
+                    // レイヤー2：VASスライダー
+                    VStack(spacing: 0) {
+                        // 上段：絵文字
+                        ZStack {
+                            Text("😀")
+                                .font(.system(size: 60))
+                                .position(x: 0, y: 80 - 15)
+                            Text("😫")
+                                .font(.system(size: 60))
+                                .position(x: vasWidth, y: 80 - 15)
+                        }
+                        .frame(width: vasWidth, height: 80)
+                        .opacity(isNonBiasMode ? 0 : 1)
+                        
+                        // 三角定規＋ガイド
+                        ZStack {
+                            TriangularVASBar()
+                                .fill(Color.blue.opacity(0.3))
+                            
+                            let xPos = CGFloat(vasValue / 100.0) * vasWidth
+                            Rectangle()
+                                .fill(Color.blue)
+                                .frame(width: 4, height: triangleHeight + 40)
+                                .position(x: xPos, y: triangleHeight / 2)
+                        }
+                        .frame(width: vasWidth, height: triangleHeight)
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    let width = vasWidth
+                                    let clampedX = min(max(0, value.location.x), width)
+                                    vasValue = Double(clampedX / width) * 100.0
+                                }
+                        )
+                        
+                        // 下段：ラベル
+                        ZStack {
+                            Text("全く痛くない")
+                                .font(.system(size: isPhone ? 20 : 28, weight: .bold))
+                                .position(x: 0, y: 30)
+                            Text("耐えられないほど痛い")
+                                .font(.system(size: isPhone ? 20 : 28, weight: .bold))
+                                .position(x: vasWidth, y: 30)
+                        }
+                        .frame(width: vasWidth, height: 60)
+                        .opacity(isNonBiasMode ? 0 : 1)
+                    }
+                    .position(x: geo.size.width / 2, y: geo.size.height / 2 + 3)
+                    .zIndex(2)
+                    
+                    // レイヤー3：VAS数値の表示
+                    if isShowingValue {
+                        Text("\(Int(vasValue))")
+                            .font(.system(size: 80, weight: .bold))
+                            .padding(10)
+                            .background(Color.white.opacity(0.6))
+                            .cornerRadius(10)
+                            .position(x: geo.size.width / 2, y: geo.size.height - 190)
+                            .zIndex(3)
+                    }
+                    
+                    // レイヤー4：記録ボタン
+                    Button {
+                        guard !isRecording else { return }
+                        isRecording = true
+                        isShowingValue = true
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+                            saveVAS(value: vasValue)
+                            isShowingValue = false
+                            isRecording = false
+                            vasValue = 50.0
+                        }
+                    } label: {
+                        Text(isRecording ? "記録しています…" : "記録")
+                            .font(.system(size: 32, weight: .bold))
+                            .padding(.vertical, 10)
+                            .frame(width: geo.size.width - 260 * 2)
+                            .background(isRecording ? Color.white : Color.blue)
+                            .foregroundColor(isRecording ? Color.blue : Color.white)
+                            .cornerRadius(12)
+                    }
+                    .position(x: geo.size.width / 2, y: geo.size.height - 35)
+                    .zIndex(4)
+                    
+                    // レイヤー5：検者ボタン
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Button {
+                                isShowingExaminerSheet = true
+                            } label: {
+                                Image(systemName: "gearshape.fill")
+                                    .resizable()
+                                    .frame(width: 40, height: 40)
+                                    .foregroundColor(Color.gray.opacity(0.4))
+                                    .background(Color.white.opacity(0.3))
+                                    .clipShape(Circle())
+                            }
+                            .padding(.top, 36)
+                            .padding(.trailing, -10)
+                        }
+                        Spacer()
+                    }
+                    .zIndex(5)
                 }
-                .zIndex(5)
+            }
+            .sheet(isPresented: $isShowingExaminerSheet) {
+                ExaminerMenuView()
             }
         }
-        // シート設定
-        .sheet(isPresented: $isShowingExaminerSheet) {
-            ExaminerMenuView()
-        }
     }
-
+    
     // MARK: - VAS値の保存
     func saveVAS(value: Double) {
         let rounded = Int(round(value))
         let now = Date()
-
+        
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
         formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -216,17 +208,17 @@ struct ContentView: View {
         
         let ts = formatter.string(from: now)
         let modeString = isNonBiasMode ? "NonBiased" : "Standard"
-
-        let row = "\(ts),\(rounded),\(modeString)\n"
-
+        
+        let row = "\(ts),\(patientID),\(rounded),\(modeString)\n"
+        
         do {
             let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
             let url = docs.appendingPathComponent("iphone15_vas.csv")
-
+            
             let fm = FileManager.default
-
+            
             if !fm.fileExists(atPath: url.path) {
-                let header = "timestamp,vas_value,mode\n"
+                let header = "timestamp,patient_id,vas_value,mode\n"
                 let data = (header + row).data(using: .utf8)!
                 try data.write(to: url, options: .atomic)
             } else {
@@ -246,27 +238,36 @@ struct ContentView: View {
 // 検者用メニュー
 struct ExaminerMenuView: View {
     @AppStorage("isNonBiasMode") private var isNonBiasMode: Bool = false
-
+    @AppStorage("patientID") private var patientID: String = ""
+    
     private var csvURL: URL {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         return docs.appendingPathComponent("iphone15_vas.csv")
     }
-
+    
     var body: some View {
         NavigationView {
             Form {
                 Section(header: Text("表示設定")) {
                     Toggle("ノンバイアスモード", isOn: $isNonBiasMode)
-                    Text(isNonBiasMode ? "※ 三角形と青いバーのみ表示します" : "※ 絵文字と文字ラベルを表示します")
+                    Text(isNonBiasMode ? "※ 三角形と青いバーのみ表示します" :
+                         "※ 絵文字と文字ラベルを表示します")
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
-
+                
                 Section(header: Text("データ管理")) {
                     ShareLink(item: csvURL) {
                         Label("CSVをエクスポート", systemImage: "square.and.arrow.up")
                     }
                 }
+                
+                // ★ ここから追加：患者IDの確認表示 ★
+                Section(header: Text("患者ID")) {
+                    Text("現在の患者ID: \(patientID.isEmpty ? "未登録" : patientID)")
+                        .font(.body)
+                }
+                // ★ 追加ここまで ★
             }
             .navigationTitle("検者メニュー")
         }
