@@ -17,9 +17,28 @@ struct ContentView: View {
     // 表示設定
     @AppStorage("isNonBiasMode") private var isNonBiasMode: Bool = false
     
-    // 患者 ID 登録
+    // 患者ID
     @AppStorage("patientID") private var patientID: String = ""
-    @State private var tempPatientID: String = ""
+    @State private var tempPatientID: String = ""   // ← 後で不要になるが今はそのまま
+    
+    // 患者IDカウンター（次に使う番号）
+    @AppStorage("nextPatientNumber") private var nextPatientNumber: Int = 1
+    
+    // 患者基本情報（改良版）
+    @AppStorage("patientLastName") private var lastName: String = ""    // 姓
+    @AppStorage("patientFirstName") private var firstName: String = ""  // 名
+    @AppStorage("patientBirthDate") private var birthDate: Date = Date()
+    @AppStorage("patientGender") private var gender: String = "M"
+    @AppStorage("patientHeight") private var height: Double = 170.0
+    @AppStorage("patientWeight") private var weight: Double = 60.0
+    
+    // 一時入力用
+    @State private var tempLastName: String = ""
+    @State private var tempFirstName: String = ""
+    @State private var tempBirthDate: Date = Date()
+    @State private var tempGender: String = "M"
+    @State private var tempHeight: Double = 170.0
+    @State private var tempWeight: Double = 60.0
     
     // VAS関連状態
     @State private var vasValue: Double = 50.0
@@ -42,27 +61,101 @@ struct ContentView: View {
     var isPhone: Bool {
         UIDevice.current.userInterfaceIdiom == .phone
     }
+
+    // BMI 計算
+    private func calculateBMI(height: Double, weight: Double) -> Double {
+        let heightM = height / 100.0
+        guard heightM > 0 else { return 0 }
+        return weight / (heightM * heightM)
+    }
+    
+    // 年齢計算
+    private func calculateAge(from birthDate: Date) -> Int {
+        let calendar = Calendar.current
+        let now = Date()
+        let comps = calendar.dateComponents([.year], from: birthDate, to: now)
+        return comps.year ?? 0
+    }
     
     // MARK: - 画面本体
     var body: some View {
         // 患者ID未登録なら登録画面
         if patientID.isEmpty {
-            VStack {
-                Text("患者IDを登録してください")
-                    .font(.title)
-                    .padding()
-                TextField("患者ID（例: P001）", text: $tempPatientID)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
-                Button("登録する") {
-                    patientID = tempPatientID
+            VStack(spacing: 16) {
+                Text("患者情報を登録してください")
+                    .font(.title2)
+                    .padding(.top, 32)
+                
+                // 患者ID
+                TextField("患者ID（例: 001）", text: $tempPatientID)
+                    .textFieldStyle(.roundedBorder)
+                    .padding(.horizontal)
+                
+                // 姓・名
+                HStack {
+                    TextField("姓（例: 山田）", text: $tempLastName)
+                        .textFieldStyle(.roundedBorder)
+                    TextField("名（例: たか）", text: $tempFirstName)
+                        .textFieldStyle(.roundedBorder)
                 }
-                .disabled(tempPatientID.isEmpty)
+                .padding(.horizontal)
+                
+                // 生年月日
+                DatePicker("生年月日", selection: $tempBirthDate, displayedComponents: .date)
+                    .datePickerStyle(.compact)
+                    .padding(.horizontal)
+                
+                // 性別
+                Picker("性別", selection: $tempGender) {
+                    Text("男性").tag("M")
+                    Text("女性").tag("F")
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                
+                // 身長・体重
+                HStack {
+                    TextField("身長(cm)", value: $tempHeight, format: .number)
+                        .textFieldStyle(.roundedBorder)
+                    TextField("体重(kg)", value: $tempWeight, format: .number)
+                        .textFieldStyle(.roundedBorder)
+                }
+                .padding(.horizontal)
+                
+                // BMI 表示
+                Text("BMI: \(String(format: "%.1f", calculateBMI(height: tempHeight, weight: tempWeight)))")
+                    .font(.headline)
+                    .foregroundColor(.blue)
+                
+                // 登録ボタン
+                Button("登録する") {
+                    // 自動採番: 1 → "001", 2 → "002" ...
+                    let generatedID = String(format: "%03d", nextPatientNumber)
+
+                    // ここで generatedID を使う
+                    patientID = generatedID
+                    lastName = tempLastName
+                    firstName = tempFirstName
+                    birthDate = tempBirthDate
+                    gender = tempGender
+                    height = tempHeight
+                    weight = tempWeight
+
+                    // 次の患者用に番号を+1
+                    nextPatientNumber += 1
+                }
+
+                .buttonStyle(.borderedProminent)
+                .disabled(
+                    tempPatientID.trimmingCharacters(in: .whitespaces).isEmpty ||
+                    tempLastName.trimmingCharacters(in: .whitespaces).isEmpty ||
+                    tempFirstName.trimmingCharacters(in: .whitespaces).isEmpty
+                )
+                .padding(.vertical, 24)
             }
-            .padding()
-        } else {
-            // VAS画面
+        } else {            // 既存の VAS 画面（GeometryReader { geo in ... }）はそのまま
             GeometryReader { geo in
+
                 ZStack {
                     // レイヤー0：隠し署名
                     Text("Kizen Sasaki")
@@ -73,7 +166,7 @@ struct ContentView: View {
                     
                     // レイヤー1：タイトル
                     VStack {
-                        Text("今の痛みの強さをスライダーを示してください")
+                        Text("今の痛み『ここ』と思う位置まで，画面をタッチしながら\n青棒を横に動かして")
                             .font(.title)
                             .multilineTextAlignment(.center)
                             .padding(.top, 31)
@@ -209,7 +302,22 @@ struct ContentView: View {
         let ts = formatter.string(from: now)
         let modeString = isNonBiasMode ? "NonBiased" : "Standard"
         
-        let row = "\(ts),\(patientID),\(rounded),\(modeString)\n"
+        // ★ ここで年齢とBMIを計算する
+        let age = calculateAge(from: birthDate)
+        let bmi = calculateBMI(height: height, weight: weight)
+        
+        // ★ CSV 1行分（列を増やした版）
+        let row = "\(ts)," +
+                  "\(patientID)," +
+                  "\(lastName)," +
+                  "\(firstName)," +
+                  "\(age)," +
+                  "\(gender)," +
+                  "\(Int(height))," +
+                  "\(Int(weight))," +
+                  "\(String(format: "%.1f", bmi))," +
+                  "\(rounded)," +
+                  "\(modeString)\n"
         
         do {
             let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -218,7 +326,8 @@ struct ContentView: View {
             let fm = FileManager.default
             
             if !fm.fileExists(atPath: url.path) {
-                let header = "timestamp,patient_id,vas_value,mode\n"
+                // ★ ヘッダーも列を揃える
+                let header = "timestamp,patient_id,last_name,first_name,age,gender,height_cm,weight_kg,bmi,vas_value,mode\n"
                 let data = (header + row).data(using: .utf8)!
                 try data.write(to: url, options: .atomic)
             } else {
@@ -235,41 +344,100 @@ struct ContentView: View {
     }
 }
 
+
 // 検者用メニュー
 struct ExaminerMenuView: View {
     @AppStorage("isNonBiasMode") private var isNonBiasMode: Bool = false
+
+    // 患者情報（読み取り用）
     @AppStorage("patientID") private var patientID: String = ""
-    
+    @AppStorage("patientLastName") private var lastName: String = ""
+    @AppStorage("patientFirstName") private var firstName: String = ""
+    @AppStorage("patientBirthDate") private var birthDate: Date = Date()
+    @AppStorage("patientGender") private var gender: String = "M"
+    @AppStorage("patientHeight") private var height: Double = 170.0
+    @AppStorage("patientWeight") private var weight: Double = 60.0
+
     private var csvURL: URL {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         return docs.appendingPathComponent("iphone15_vas.csv")
     }
     
+    // 年齢計算
+    private func calculateAge(from birthDate: Date) -> Int {
+        let calendar = Calendar.current
+        let now = Date()
+        let comps = calendar.dateComponents([.year], from: birthDate, to: now)
+        return comps.year ?? 0
+    }
+
+    // BMI計算（ContentViewと同じ式）
+    private func calculateBMI(height: Double, weight: Double) -> Double {
+        let heightM = height / 100.0
+        guard heightM > 0 else { return 0 }
+        return weight / (heightM * heightM)
+    }
+    
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("表示設定")) {
-                    Toggle("ノンバイアスモード", isOn: $isNonBiasMode)
-                    Text(isNonBiasMode ? "※ 三角形と青いバーのみ表示します" :
-                         "※ 絵文字と文字ラベルを表示します")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                }
-                
-                Section(header: Text("データ管理")) {
-                    ShareLink(item: csvURL) {
-                        Label("CSVをエクスポート", systemImage: "square.and.arrow.up")
+                Section(header: Text("患者情報")) {
+                    if patientID.isEmpty {
+                        Text("患者情報は未登録です")
+                            .foregroundColor(.secondary)
+                    } else {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("ID:")
+                                    .bold()
+                                Text(patientID)
+                                Text("氏名:")
+                                    .bold()
+                                Text("\(lastName) \(firstName)")
+                            }
+                            HStack {
+                                Text("生年月日:")
+                                    .bold()
+                                Text(birthDate, style: .date)   // 例: 1965/04/01
+                                Text("年齢:")
+                                    .bold()
+                                Text("\(calculateAge(from: birthDate)) 歳")
+                            }
+                            HStack {
+                                Text("性別:")
+                                    .bold()
+                                Text(gender == "M" ? "男性" : "女性")
+                                Text("身長:")
+                                    .bold()
+                                Text("\(Int(height)) cm")
+                            }
+                            HStack {
+                                Text("体重:")
+                                    .bold()
+                                Text("\(Int(weight)) kg")
+                                Text("BMI:")
+                                    .bold()
+                                Text(String(format: "%.1f", calculateBMI(height: height, weight: weight)))
+                                    .foregroundColor(.blue)
+                            }
+                        }
+
+                        Button("患者情報を変更") {
+                            patientID = ""
+                        }
+                        .foregroundStyle(.red)
                     }
                 }
+
                 
-                // ★ ここから追加：患者IDの確認表示 ★
-                Section(header: Text("患者ID")) {
-                    Text("現在の患者ID: \(patientID.isEmpty ? "未登録" : patientID)")
-                        .font(.body)
+                Section(header: Text("データ管理")) {
+                    Button("CSVをエクスポート") {
+                        // 既存のCSVエクスポートコード
+                    }
                 }
-                // ★ 追加ここまで ★
             }
             .navigationTitle("検者メニュー")
         }
     }
 }
+

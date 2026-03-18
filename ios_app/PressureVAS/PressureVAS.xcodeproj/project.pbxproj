@@ -10,9 +10,22 @@
 		D6DBE63E2EEBC870006AF020 /* PressureVAS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PressureVAS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D6C87E932F6A94170048FAB2 /* Exceptions for "PressureVAS" folder in "PressureVAS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D6DBE63D2EEBC870006AF020 /* PressureVAS */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D6DBE6402EEBC870006AF020 /* PressureVAS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D6C87E932F6A94170048FAB2 /* Exceptions for "PressureVAS" folder in "PressureVAS" target */,
+			);
 			path = PressureVAS;
 			sourceTree = "<group>";
 		};
@@ -258,6 +271,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PressureVAS/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "VAS Scale";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -304,6 +318,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PressureVAS/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "VAS Scale";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
