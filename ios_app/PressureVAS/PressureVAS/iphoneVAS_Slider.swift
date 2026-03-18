@@ -81,6 +81,7 @@ struct ContentView: View {
     var body: some View {
         // 患者ID未登録なら登録画面
         if patientID.isEmpty {
+            
             VStack(spacing: 16) {
                 Text("患者情報を登録してください")
                     .font(.title2)
@@ -102,7 +103,8 @@ struct ContentView: View {
                 
                 // 生年月日
                 DatePicker("生年月日", selection: $tempBirthDate, displayedComponents: .date)
-                    .datePickerStyle(.compact)
+                   // .datePickerStyle(.compact) カレンダーホイル式
+                    .datePickerStyle(.graphical)  // ★カレンダー表示でホイールにならない
                     .padding(.horizontal)
                 
                 // 性別
@@ -130,7 +132,20 @@ struct ContentView: View {
                 // 登録ボタン
                 Button("登録する") {
                     // 自動採番: 1 → "001", 2 → "002" ...
-                    let generatedID = String(format: "%03d", nextPatientNumber)
+                    // let generatedID = String(format: "%03d", nextPatientNumber)
+                    let generatedID = "001"
+                    VStack {
+                        // 上部: タイトルやVASスライダー
+                    }
+                    .safeAreaInset(edge: .bottom) {
+                        Button("登録") {
+                            // 保存処理
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(.blue)
+                        .foregroundColor(.white)
+                    }
 
                     // ここで generatedID を使う
                     patientID = generatedID
@@ -142,7 +157,7 @@ struct ContentView: View {
                     weight = tempWeight
 
                     // 次の患者用に番号を+1
-                    nextPatientNumber += 1
+                    // nextPatientNumber += 1
                 }
 
                 .buttonStyle(.borderedProminent)
@@ -151,7 +166,10 @@ struct ContentView: View {
                     tempLastName.trimmingCharacters(in: .whitespaces).isEmpty ||
                     tempFirstName.trimmingCharacters(in: .whitespaces).isEmpty
                 )
-                .padding(.vertical, 24)
+                .padding(.vertical, 16)
+                
+                // 画面下側の余白用
+                Spacer()
             }
         } else {            // 既存の VAS 画面（GeometryReader { geo in ... }）はそのまま
             GeometryReader { geo in
@@ -166,7 +184,7 @@ struct ContentView: View {
                     
                     // レイヤー1：タイトル
                     VStack {
-                        Text("今の痛み『ここ』と思う位置まで，画面をタッチしながら\n青棒を横に動かして")
+                        Text("『痛い ここ』と思う位置まで画面\nタッチしながら青棒を横に動かして")
                             .font(.title)
                             .multilineTextAlignment(.center)
                             .padding(.top, 31)
@@ -347,6 +365,8 @@ struct ContentView: View {
 
 // 検者用メニュー
 struct ExaminerMenuView: View {
+    @Environment(\.dismiss) private var dismiss
+    
     @AppStorage("isNonBiasMode") private var isNonBiasMode: Bool = false
 
     // 患者情報（読み取り用）
@@ -429,10 +449,16 @@ struct ExaminerMenuView: View {
                     }
                 }
 
-                
                 Section(header: Text("データ管理")) {
                     Button("CSVをエクスポート") {
                         // 既存のCSVエクスポートコード
+                    }
+                }
+                        
+                Section(header: Text("測定")) {
+                    Button("VAS測定に戻る") {
+                        dismiss()   // 検者メニューを閉じてVAS画面に戻る
+                        
                     }
                 }
             }
@@ -440,4 +466,3 @@ struct ExaminerMenuView: View {
         }
     }
 }
-
