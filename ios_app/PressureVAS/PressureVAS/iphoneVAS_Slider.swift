@@ -17,6 +17,10 @@ struct ContentView: View {
     // 表示設定
     @AppStorage("isNonBiasMode") private var isNonBiasMode: Bool = false
     
+    @State private var birthYearText: String = ""
+    @State private var birthMonthText: String = ""
+    @State private var birthDayText: String = ""
+    
     // 患者ID
     @AppStorage("patientID") private var patientID: String = ""
     @State private var tempPatientID: String = ""   // ← 後で不要になるが今はそのまま
@@ -101,19 +105,22 @@ struct ContentView: View {
                 }
                 .padding(.horizontal)
                 
-                // 生年月日
-                DatePicker("生年月日", selection: $tempBirthDate, displayedComponents: .date)
-                   // .datePickerStyle(.compact) カレンダーホイル式
-                    .datePickerStyle(.graphical)  // ★カレンダー表示でホイールにならない
-                    .padding(.horizontal)
-                
-                // 性別
-                Picker("性別", selection: $tempGender) {
-                    Text("男性").tag("M")
-                    Text("女性").tag("F")
+                // 生年月日（テキスト入力）
+                HStack {
+                    TextField("生年(西暦)", text: $birthYearText)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
+
+                    TextField("月", text: $birthMonthText)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
+
+                    TextField("日", text: $birthDayText)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
                 }
-                .pickerStyle(.segmented)
                 .padding(.horizontal)
+
                 
                 // 身長・体重
                 HStack {
@@ -128,45 +135,42 @@ struct ContentView: View {
                 Text("BMI: \(String(format: "%.1f", calculateBMI(height: tempHeight, weight: tempWeight)))")
                     .font(.headline)
                     .foregroundColor(.blue)
-                
-                // 登録ボタン
+
+                // 登録ボタン（ここに全部まとめる）
                 Button("登録する") {
-                    // 自動採番: 1 → "001", 2 → "002" ...
-                    // let generatedID = String(format: "%03d", nextPatientNumber)
-                    let generatedID = "001"
-                    VStack {
-                        // 上部: タイトルやVASスライダー
-                    }
-                    .safeAreaInset(edge: .bottom) {
-                        Button("登録") {
-                            // 保存処理
+                    // ① 生年月日テキスト → Date に変換
+                    if let y = Int(birthYearText),
+                       let m = Int(birthMonthText),
+                       let d = Int(birthDayText) {
+                        var comps = DateComponents()
+                        comps.year = y
+                        comps.month = m
+                        comps.day = d
+                        if let date = Calendar.current.date(from: comps) {
+                            birthDate = date
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(.blue)
-                        .foregroundColor(.white)
                     }
 
-                    // ここで generatedID を使う
+                    // ② IDや氏名などを保存
+                    let generatedID = "001"    // ひとり専用なので固定IDにする場合
                     patientID = generatedID
                     lastName = tempLastName
                     firstName = tempFirstName
-                    birthDate = tempBirthDate
+                    // birthDate は上で更新済み
                     gender = tempGender
                     height = tempHeight
                     weight = tempWeight
 
-                    // 次の患者用に番号を+1
-                    // nextPatientNumber += 1
+                    // nextPatientNumber += 1 は不要なら消す
                 }
-
                 .buttonStyle(.borderedProminent)
                 .disabled(
                     tempPatientID.trimmingCharacters(in: .whitespaces).isEmpty ||
                     tempLastName.trimmingCharacters(in: .whitespaces).isEmpty ||
                     tempFirstName.trimmingCharacters(in: .whitespaces).isEmpty
                 )
-                .padding(.vertical, 16)
+                .padding(.top, 16)
+
                 
                 // 画面下側の余白用
                 Spacer()
